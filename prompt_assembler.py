@@ -21,9 +21,6 @@ class PromptAssembler:
     用于从文件和目录中智能地组合上下文。
     """
 
-    DEFAULT_FILE_TAG = "PROMPT_SNIPPET_FILE"
-    DEFAULT_DIR_TAG = "directory"
-
     def __init__(self, model: str = DEFAULT_MODEL):
         """
         初始化 PromptAssembler。
@@ -138,7 +135,9 @@ class PromptAssembler:
             best_match_path = search_dir / best_match_name
             # 2. 从完整路径计算出相对于 base_dir 的正确相对路径
             #    这是修复目录重复问题的关键
-            relative_path_for_include = best_match_path.relative_to(self.base_dir)
+            relative_path_for_include = best_match_path.relative_to(
+                self.base_dir, walk_up=True
+            )
 
             if score < 100:
                 print(
@@ -186,7 +185,9 @@ class PromptAssembler:
                     file=sys.stderr,
                 )
                 continue
-            relative_path_for_display = file_path.relative_to(self.base_dir)
+            relative_path_for_display = file_path.relative_to(
+                self.base_dir, walk_up=True
+            )
             included_files_content.append(
                 self._include_file(str(relative_path_for_display))
             )
@@ -282,12 +283,9 @@ def main():
         with open(args.output, "w", encoding="utf-8") as f:
             f.write(final_prompt)
         print(f"✅ 结果已经保存到 ./{args.output}")
-    except (FileNotFoundError, NotADirectoryError, ValueError, IOError) as e:
-        print(f"\n错误: {e}", file=sys.stderr)
-        sys.exit(1)
     except Exception as e:
         print(f"\n发生未知错误: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise e
 
 
 if __name__ == "__main__":

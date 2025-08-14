@@ -52,6 +52,15 @@ Prompt Assembler - 智能提示词（Prompt）生成引擎
 
     ```
 
+3. **运行示例**
+
+    Bash
+
+    ```
+    python3 prompt_assembler.py example/my_prompt.j2
+    ```
+
+
 📚 使用教程
 -------
 
