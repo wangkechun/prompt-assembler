@@ -7,11 +7,20 @@ import pyperclip
 import tiktoken
 import argparse
 from typing import List, Optional, Set
+import re
 
 # --- 常量定义 ---
 DEFAULT_MODEL = "gpt-4o"
 DEFAULT_FILE_TAG = "PROMPT_SNIPPET_FILE"
 DEFAULT_DIR_TAG = "PROMPT_SNIPPET_DIRECTORY"
+
+
+def remove_pattern(input_string: str) -> str:
+    """
+    从字符串中移除所有符合连续注释之间的空白
+    """
+    pattern = r"\#}\s+\{\#"
+    return re.sub(pattern, "", input_string)
 
 
 class PromptAssembler:
@@ -62,13 +71,17 @@ class PromptAssembler:
     def _include_file(
         self,
         path: str,
+        base_dir: Optional[str] = None,
         show_filename: bool = True,
         tag: str = DEFAULT_FILE_TAG,
     ) -> str:
         """
         嵌入单个文件内容。
         """
-        file_path = self._resolve_path(path)
+        if base_dir:
+            file_path = Path(base_dir).resolve() / Path(path)
+        else:
+            file_path = self._resolve_path(path)
         if file_path in self.included_paths:
             print(
                 f"WARNING: The file '{path}' has been included more than once.",
@@ -207,8 +220,9 @@ class PromptAssembler:
         self._initialize_environment(template_path)
         if self.env is None:
             raise RuntimeError("Jinja2 environment not initialized.")
-        template = self.env.get_template(template_path.name)
-        return template.render(**kwargs)
+        template = self.env.from_string(remove_pattern(open(template_path).read()))
+        prompt = template.render(**kwargs)
+        return prompt
 
     def get_token_report(self, total_tokens: int, top_n: int = 5) -> str:
         """
