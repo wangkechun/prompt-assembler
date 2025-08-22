@@ -1,3 +1,12 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "jinja2",
+#     "pyperclip",
+#     "rapidfuzz",
+#     "tiktoken",
+# ]
+# ///
 from pathlib import Path
 from functools import partial
 import sys
@@ -8,6 +17,7 @@ import tiktoken
 import argparse
 from typing import List, Optional, Set
 import re
+from datetime import datetime
 
 # --- 常量定义 ---
 DEFAULT_MODEL = "gpt-4o"
@@ -59,6 +69,8 @@ class PromptAssembler:
         self.env.globals["include_file"] = partial(self._include_file)
         self.env.globals["include_fuzzy"] = partial(self._include_fuzzy)
         self.env.globals["include_dir"] = partial(self._include_dir)
+        self.env.globals["include_dir"] = partial(self._include_dir)
+        self.env.globals["today"] = datetime.now().strftime("%Y-%m-%d")
 
     def _resolve_path(self, path_str: str) -> Path:
         """将模板中的相对路径解析为相对于模板文件本身的绝对路径。"""
